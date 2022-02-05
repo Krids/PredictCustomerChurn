@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "predictcustomerchurn"
+version = "0.1.0"
+description = "Project of Udacity to predict customer churn."
+authors = ["Felipe Lana Machado"]
+license = "Free"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+pandas = "^1.4.0"
+numpy = "^1.22.2"
+matplotlib = "^3.5.1"
+notebook = "^6.4.8"
+jupyter = "^1.0.0"
+autopep8 = "^1.6.0"
+pylint = "^2.12.2"
+shap = "^0.40.0"
+seaborn = "^0.11.2"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
