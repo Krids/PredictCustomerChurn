@@ -1,3 +1,1 @@
-root - INFO - Testing import_data: SUCCESS
-root - INFO - SUCCESS: Data has 10127 rows and 23 columns.
-root - INFO - SUCCESS: The is 5 files in images EDA directory.
+root - INFO - SUCCESS on encoder_helper(): There is columns containing the name chrun_rate in the dataframe.

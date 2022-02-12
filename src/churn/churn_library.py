@@ -50,30 +50,32 @@ class Churn:
         output:
                 None
         '''
-        df['Churn'] = df['Attrition_Flag'].apply(lambda val: 0 if val == "Existing Customer" else 1)
+        df['churn'] = df['Attrition_Flag'].apply(
+            lambda val: 0 if val == "Existing Customer" else 1)
 
-        plt.figure(figsize=(20,10)) 
-        df['Churn'].hist()
+        plt.figure(figsize=(20, 10))
+        df['churn'].hist()
         plt.savefig(os.path.join(IMAGES_EDA, 'churn_distribuition.png'))
 
-        plt.figure(figsize=(20,10)) 
+        plt.figure(figsize=(20, 10))
         df['Customer_Age'].hist()
         plt.savefig(os.path.join(IMAGES_EDA, 'customer_age_distribuition.png'))
 
-        plt.figure(figsize=(20,10)) 
+        plt.figure(figsize=(20, 10))
         df['Marital_Status'].value_counts('normalize').plot(kind='bar')
-        plt.savefig(os.path.join(IMAGES_EDA, 'marital_status_distribuition.png'))
+        plt.savefig(os.path.join(
+            IMAGES_EDA, 'marital_status_distribuition.png'))
 
-        plt.figure(figsize=(20,10)) 
+        plt.figure(figsize=(20, 10))
         sns.histplot(df['Total_Trans_Ct'])
-        plt.savefig(os.path.join(IMAGES_EDA, 'total_transaction_distribuition.png'))
+        plt.savefig(os.path.join(
+            IMAGES_EDA, 'total_transaction_distribuition.png'))
 
-        plt.figure(figsize=(20,10)) 
-        sns.heatmap(df.corr(), annot=False, cmap='Dark2_r', linewidths = 2)
+        plt.figure(figsize=(20, 10))
+        sns.heatmap(df.corr(), annot=False, cmap='Dark2_r', linewidths=2)
         plt.savefig(os.path.join(IMAGES_EDA, 'heatmap.png'))
 
-
-    def encoder_helper(self, df, category_lst, response):
+    def encoder_helper(self, df: pd.DataFrame, category_list: list, response: str) -> pd.DataFrame:
         '''
         helper function to turn each categorical column into a new column with
         propotion of churn for each category - associated with cell 15 from the notebook
@@ -84,9 +86,15 @@ class Churn:
                 response: string of response name [optional argument that could be used for naming variables or index y column]
 
         output:
-                df: pandas dataframe with new columns for
+                df: pandas dataframe with new columns for training and testing.
         '''
-        pass
+        df = df.copy()
+        for category in category_list:
+            category_groups = df.groupby(category).mean()[response]
+            df[f'{category}_{response}'] = [category_groups.loc[val]
+                                            for val in df[category]]
+
+        return df
 
     def perform_feature_engineering(self, df, response):
         '''
