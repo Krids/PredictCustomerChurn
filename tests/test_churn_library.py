@@ -7,6 +7,10 @@ Date: 06/02/2022
 import os
 import logging as log
 import unittest
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import GridSearchCV
 from src.churn.churn_library import Churn
 from src.helpers.project_paths import DOCS_LOGS, IMAGES_EDA
 
@@ -55,14 +59,14 @@ class TestChurn(unittest.TestCase):
 
     def test_eda(self):
         '''
-        Test perform eda function
+        Test the perform eda function, looking to assert if there is files in the images/eda folder after the execution on the program.
 
         Raises:
             err: Raises an AssertionError if there is no files in image folders.
         '''
         df = self.churn.import_data("bank_data.csv")
         try:
-            self.churn.perform_eda(df=df)
+            df = self.churn.perform_eda(df=df)
             list = os.listdir(IMAGES_EDA)
             number_files = len(list)
             self.assertTrue(number_files == 5)
@@ -80,34 +84,207 @@ class TestChurn(unittest.TestCase):
         Raises:
             err: Raises an AssertionError if there is no columns that contains _churn.
         '''
-        
+
         df = self.churn.import_data("bank_data.csv")
-        df['churn'] = df['Attrition_Flag'].apply(lambda val: 0 if val == "Existing Customer" else 1)
-        df.drop(columns=['Attrition_Flag'], inplace=True)
-        df['churn'] = df['churn'].astype('int8')
+        df = self.churn.perform_eda(df=df)
         try:
-            df = self.churn.encoder_helper(df=df, category_list=list(df.select_dtypes(include=['object']).columns), response='churn')
-            has_churn_rate_columns = any([True if x.find('_churn') != -1 else False for x in list(df.columns)])
+            df = self.churn.encoder_helper(df=df, category_list=list(
+                df.select_dtypes(include=['object']).columns), response='churn')
+            has_churn_rate_columns = any(
+                [True if x.find('_churn') != -1 else False for x in list(df.columns)])
             self.assertTrue(has_churn_rate_columns)
             log.info(
-                f"SUCCESS on encoder_helper(): There is columns containing the name chrun_rate in the dataframe.")
+                f"SUCCESS on encoder_helper(): There is columns containing the name _chrun in the dataframe.")
         except AssertionError as err:
             log.error(
-                f"ERROR on encoder_helper(): There isn`t any columns containing the name chrun_rate in the dataframe.")
+                f"ERROR on encoder_helper(): There isn`t any columns containing the name _chrun in the dataframe.")
             raise err
 
-    def test_perform_feature_engineering(perform_feature_engineering):
+    def test_perform_feature_engineering(self):
         '''
         test perform_feature_engineering
 
         Raises:
             err: Raises an AssertionError if there is no files in image folders.
         '''
+        df = self.churn.import_data("bank_data.csv")
+        df = self.churn.perform_eda(df=df)
+        df = self.churn.encoder_helper(df=df, category_list=list(
+            df.select_dtypes(include=['object']).columns), response='churn')
+        columns_for_training = ['Customer_Age', 'Dependent_count', 'Months_on_book',
+                                'Total_Relationship_Count', 'Months_Inactive_12_mon',
+                                'Contacts_Count_12_mon', 'Credit_Limit', 'Total_Revolving_Bal',
+                                'Avg_Open_To_Buy', 'Total_Amt_Chng_Q4_Q1', 'Total_Trans_Amt',
+                                'Total_Trans_Ct', 'Total_Ct_Chng_Q4_Q1', 'Avg_Utilization_Ratio',
+                                'Gender_churn', 'Education_Level_churn', 'Marital_Status_churn',
+                                'Income_Category_churn', 'Card_Category_churn']
+        X_train, X_test, y_train, y_test = self.churn.perform_feature_engineering(
+            df=df, response=columns_for_training)
+        try:
+            self.assertFalse(X_train.empty)
+            self.assertFalse(y_train.empty)
+            log.info(
+                'SUCCESS on perform_feature_engineering: Train data was created and not empty.')
 
-    def test_train_models(train_models):
+        except AssertionError as err:
+            log.error(
+                'ERROR on perform_feature_engineering: Train data could not be created')
+            raise err
+
+        try:
+            self.assertFalse(X_test.empty)
+            self.assertFalse(y_test.empty)
+            log.info(
+                'SUCCESS on perform_feature_engineering: Test data was created and not empty.')
+
+        except AssertionError as err:
+            log.error(
+                'ERROR on perform_feature_engineering: Test data could not be created.')
+            raise err
+
+        try:
+            self.assertEqual(X_train.shape[0] == y_train.shape[0])
+            log.info(
+                'SUCCESS on perform_feature_engineering: Train data shapes match.')
+
+        except AssertionError as err:
+            log.error(
+                'ERROR on perform_feature_engineering: Train data X and Y doesnt match.')
+            raise err
+
+        try:
+            self.assertEqual(X_test.shape[0] == y_test.shape[0])
+            log.info(
+                'SUCCESS on perform_feature_engineering: Train data shapes match.')
+
+        except AssertionError as err:
+            log.error(
+                'ERROR on perform_feature_engineering: Test data X and Y doesnt match.')
+            raise err
+
+    def test_classification_report(self):
+        """
+        Tests if the function produces classification report for training and testing results and stores report as image
+        in images/eda folder.
+
+        Raises:
+            err: Raises an AssertionError if there is no files in images/eda folder.
+        """
+        df = self.churn.import_data("bank_data.csv")
+        df = self.churn.perform_eda(df=df)
+        df = self.churn.encoder_helper(df=df, category_list=list(
+            df.select_dtypes(include=['object']).columns), response='churn')
+        columns_for_training = ['Customer_Age', 'Dependent_count', 'Months_on_book',
+                                'Total_Relationship_Count', 'Months_Inactive_12_mon',
+                                'Contacts_Count_12_mon', 'Credit_Limit', 'Total_Revolving_Bal',
+                                'Avg_Open_To_Buy', 'Total_Amt_Chng_Q4_Q1', 'Total_Trans_Amt',
+                                'Total_Trans_Ct', 'Total_Ct_Chng_Q4_Q1', 'Avg_Utilization_Ratio',
+                                'Gender_churn', 'Education_Level_churn', 'Marital_Status_churn',
+                                'Income_Category_churn', 'Card_Category_churn']
+        X_train, X_test, y_train, y_test = self.churn.perform_feature_engineering(
+            df=df, response=columns_for_training)
+        
+        # grid search
+        rfc = RandomForestClassifier(random_state=42)
+        lrc = LogisticRegression()
+
+        param_grid = { 
+            'n_estimators': [200, 500],
+            'max_features': ['auto', 'sqrt'],
+            'max_depth' : [4,5,100],
+            'criterion' :['gini', 'entropy']
+        }
+
+        cv_rfc = GridSearchCV(estimator=rfc, param_grid=param_grid, cv=5)
+        cv_rfc.fit(X_train, y_train)
+
+        lrc.fit(X_train, y_train)
+
+        y_train_preds_rf = cv_rfc.best_estimator_.predict(X_train)
+        y_test_preds_rf = cv_rfc.best_estimator_.predict(X_test)
+
+        y_train_preds_lr = lrc.predict(X_train)
+        y_test_preds_lr = lrc.predict(X_test)
+
+        self.churn.classification_report_image(y_train,
+                                               y_test,
+                                               y_train_preds_lr,
+                                               y_train_preds_rf,
+                                               y_test_preds_lr,
+                                               y_test_preds_rf)
+        list_of_files = os.listdir(IMAGES_EDA)
+        images_random_forest_length = len(
+            [file for file in list_of_files if 'Random_Forest' in file])
+
+        images_logistic_regression_length = len(
+            [file for file in list_of_files if 'Logistic_Regression' in file])
+
+        try:
+            self.assertEqual(images_random_forest_length, 2)
+            log.info(
+                f'SUCCESS on classification_report: There is two images of Random Forest (Train and Test) on images/eda folder.')
+        except AssertionError as err:
+            log.error(
+                f'ERROR on classification_report: There isn`t two images of Random Forest (Train and Test) on images/eda folder.')
+            raise err
+
+        try:
+            self.assertEqual(images_logistic_regression_length, 2)
+            log.info(
+                f'SUCCESS on classification_report: There is two images of Logistic Regression (Train and Test) on images/eda folder.')
+        except AssertionError as err:
+            log.error(
+                f'ERROR on classification_report: There isn`t two images of Logistic Regression (Train and Test) on images/eda folder.')
+            raise err
+
+    def test_feature_importance_plot(self):
+        """
+        Tests if the function produces classification report for training and testing results and stores report as image
+        in images/results folder.
+
+        Raises:
+            err: Raises an AssertionError if there is no files in images/result folder.
+        """
+        
+
+        try:
+            self.assertEqual(images_logistic_regression_length, 2)
+            log.info(
+                f'SUCCESS on classification_report: There is two images of Logistic Regression (Train and Test) on images/eda folder.')
+        except AssertionError as err:
+            log.error(
+                f'ERROR on classification_report: There isn`t two images of Logistic Regression (Train and Test) on images/eda folder.')
+            raise err
+
+    def test_train_models(self):
         '''
         test train_models
 
         Raises:
             err: Raises an AssertionError if there is no files in image folders.
         '''
+        df = self.churn.import_data("bank_data.csv")
+        df = self.churn.perform_eda(df=df)
+        df = self.churn.encoder_helper(df=df, category_list=list(
+            df.select_dtypes(include=['object']).columns), response='churn')
+        columns_for_training = ['Customer_Age', 'Dependent_count', 'Months_on_book',
+                                'Total_Relationship_Count', 'Months_Inactive_12_mon',
+                                'Contacts_Count_12_mon', 'Credit_Limit', 'Total_Revolving_Bal',
+                                'Avg_Open_To_Buy', 'Total_Amt_Chng_Q4_Q1', 'Total_Trans_Amt',
+                                'Total_Trans_Ct', 'Total_Ct_Chng_Q4_Q1', 'Avg_Utilization_Ratio',
+                                'Gender_churn', 'Education_Level_churn', 'Marital_Status_churn',
+                                'Income_Category_churn', 'Card_Category_churn']
+        X_train, X_test, y_train, y_test = self.churn.perform_feature_engineering(
+            df=df, response=columns_for_training)
+        df = self.churn.train_models(
+            X_train=X_train, X_test=X_test, y_train=y_train, y_test=y_test)
+        try:
+            assert X_train.empty == False
+            assert y_train.empty == False
+            log.info(
+                'SUCCESS on train_models: Train data was created and not empty.')
+
+        except AssertionError as err:
+            log.error(
+                'ERROR on train_models: Train data could not be created')
+            raise err
