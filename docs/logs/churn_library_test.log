@@ -1,0 +1,16 @@
+root - INFO - SUCCESS on classification_report: There is two images of Random Forest (Train and Test) on images/eda folder.
+root - INFO - SUCCESS on classification_report: There is two images of Logistic Regression (Train and Test) on images/eda folder.
+root - INFO - SUCCESS on encoder_helper(): There is columns containing the name _chrun in the dataframe.
+root - INFO - SUCCESS on feature_importance_plot: There is a image of Random Forest features importance on images/results folder.
+root - INFO - SUCCESS on import_data: The data has been imported.
+root - INFO - SUCCESS on import_data: Data has 10127 rows and 23 columns.
+root - INFO - SUCCESS on perform_eda: There is 4 files for distribuition in images EDA directory.
+root - INFO - SUCCESS on perform_eda: There is one file of heatmap in images EDA directory.
+root - INFO - SUCCESS on perform_feature_engineering: Train data was created and not empty.
+root - INFO - SUCCESS on perform_feature_engineering: Test data was created and not empty.
+root - INFO - SUCCESS on perform_feature_engineering: Train data shapes match.
+root - INFO - SUCCESS on perform_feature_engineering: Test data shapes match.
+root - INFO - SUCCESS on train_models: There is one model of Random Forest on docs/models folder.
+root - INFO - SUCCESS on train_models: There is one model of Logistic Regression on docs/models folder.
+root - INFO - SUCCESS on train_models: There is one image for ROC curve on images/results folder.
+root - INFO - SUCCESS on train_models: There is one image for SHAP values on the Randon Forest on images/results folder.

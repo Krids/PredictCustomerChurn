@@ -10,8 +10,9 @@ import unittest
 import joblib
 import pandas as pd
 
-from src.churn.churn_library import Churn
+from src.helpers.constants import COLUMNS_FOR_TRAINING
 from src.helpers.project_paths import DOCS_LOGS, DOCS_MODELS, IMAGES_EDA, IMAGES_RESULTS
+from src.churn.churn_library import Churn
 
 
 class TestChurn(unittest.TestCase):
@@ -33,31 +34,24 @@ class TestChurn(unittest.TestCase):
             err: Raises an FileNotFoundError
         '''
         try:
-            df = self.churn.import_data("bank_data.csv")
+            customers_data = self.churn.import_data("bank_data.csv")
             log.info("SUCCESS on import_data: The data has been imported.")
         except FileNotFoundError as err:
             log.error("ERROR on import_data: The file wasn't found.")
             raise err
 
-    def test_has_data(self):
-        """
-        Test if data import has rows and columns.
-
-        Raises:
-            err: Raises an AssertionError
-        """
-        df = self.churn.import_data("bank_data.csv")
         try:
-            self.assertTrue(df.shape[0] > 0)
-            self.assertTrue(df.shape[1] > 0)
+            self.assertTrue(customers_data.shape[0] > 0)
+            self.assertTrue(customers_data.shape[1] > 0)
             log.info(
-                f"SUCCESS on import_data: Data has {df.shape[0]} rows and {df.shape[1]} columns.")
+                (f"SUCCESS on import_data: Data has {customers_data.shape[0]} "
+                "rows and {customers_data.shape[1]} columns."))
         except AssertionError as err:
             log.error(
                 "ERROR on import_data: The file doesn't appear to have rows and columns")
             raise err
 
-    def test_eda(self):
+    def test_perform_eda(self):
         '''
         Test the perform eda function, looking to assert if there is files in the images/eda
         folder after the execution on the program.
@@ -65,8 +59,8 @@ class TestChurn(unittest.TestCase):
         Raises:
             err: Raises an AssertionError if there is no files in image folders.
         '''
-        df = self.churn.import_data("bank_data.csv")
-        df = self.churn.perform_eda(df=df)
+        customers_data = self.churn.import_data("bank_data.csv")
+        customers_data = self.churn.perform_eda(df=customers_data)
         list_of_files = os.listdir(IMAGES_EDA)
         images_of_distribuition = len(
             [file for file in list_of_files if '_distribuition' in file])
@@ -75,22 +69,22 @@ class TestChurn(unittest.TestCase):
         try:
             self.assertTrue(images_of_distribuition == 4)
             log.info(
-                (f"SUCCESS on perform_eda: The is {images_of_distribuition}"
-                " files for distribuition in images EDA directory."))
+                (f"SUCCESS on perform_eda: There is {images_of_distribuition}"
+                 " files for distribuition in images EDA directory."))
         except AssertionError as err:
             log.error(
                 ("ERROR on perform_eda: There isn`t 4 files for distribuition"
-                " inside the images/eda directory."))
+                 " inside the images/eda directory."))
             raise err
 
         try:
             self.assertTrue(images_of_heatmap == 1)
             log.info(
-                "SUCCESS on perform_eda: The is 1 file of heatmap in images EDA directory.")
+                "SUCCESS on perform_eda: There is one file of heatmap in images EDA directory.")
         except AssertionError as err:
             log.error(
-                ("ERROR on perform_eda: There isn`t 1 files of heatmap"
-                " inside the images/eda directory."))
+                ("ERROR on perform_eda: There isn`t one files of heatmap"
+                 " inside the images/eda directory."))
             raise err
 
     def test_encoder_helper(self):
@@ -101,21 +95,21 @@ class TestChurn(unittest.TestCase):
             err: Raises an AssertionError if there is no columns that contains _churn.
         '''
 
-        df = self.churn.import_data("bank_data.csv")
-        df = self.churn.perform_eda(df=df)
+        customers_data = self.churn.import_data("bank_data.csv")
+        customers_data = self.churn.perform_eda(df=customers_data)
         try:
-            df = self.churn.encoder_helper(df=df, category_list=list(
-                df.select_dtypes(include=['object']).columns), response='churn')
+            customers_data = self.churn.encoder_helper(df=customers_data, category_list=list(
+                customers_data.select_dtypes(include=['object']).columns), response='churn')
             has_churn_rate_columns = any(
-                [bool(x.find('_churn') != -1) for x in list(df.columns)])
+                [bool(x.find('_churn') != -1) for x in list(customers_data.columns)])
             self.assertTrue(has_churn_rate_columns)
             log.info(
                 ("SUCCESS on encoder_helper(): There is columns containing"
-                " the name _chrun in the dataframe."))
+                 " the name _chrun in the dataframe."))
         except AssertionError as err:
             log.error(
                 ("ERROR on encoder_helper(): There isn`t any columns"
-                " containing the name _chrun in the dataframe."))
+                 " containing the name _chrun in the dataframe."))
             raise err
 
     def test_perform_feature_engineering(self):
@@ -125,19 +119,12 @@ class TestChurn(unittest.TestCase):
         Raises:
             err: Raises an AssertionError if there is no files in image folders.
         '''
-        df = self.churn.import_data("bank_data.csv")
-        df = self.churn.perform_eda(df=df)
-        df = self.churn.encoder_helper(df=df, category_list=list(
-            df.select_dtypes(include=['object']).columns), response='churn')
-        columns_for_training = ['Customer_Age', 'Dependent_count', 'Months_on_book',
-                                'Total_Relationship_Count', 'Months_Inactive_12_mon',
-                                'Contacts_Count_12_mon', 'Credit_Limit', 'Total_Revolving_Bal',
-                                'Avg_Open_To_Buy', 'Total_Amt_Chng_Q4_Q1', 'Total_Trans_Amt',
-                                'Total_Trans_Ct', 'Total_Ct_Chng_Q4_Q1', 'Avg_Utilization_Ratio',
-                                'Gender_churn', 'Education_Level_churn', 'Marital_Status_churn',
-                                'Income_Category_churn', 'Card_Category_churn']
+        customers_data = self.churn.import_data("bank_data.csv")
+        customers_data = self.churn.perform_eda(df=customers_data)
+        customers_data = self.churn.encoder_helper(df=customers_data, category_list=list(
+            customers_data.select_dtypes(include=['object']).columns), response='churn')
         x_train, x_test, y_train, y_test = self.churn.perform_feature_engineering(
-            df=df, response=columns_for_training)
+            df=customers_data, response=COLUMNS_FOR_TRAINING)
         try:
             self.assertFalse(x_train.empty)
             self.assertFalse(y_train.empty)
@@ -188,19 +175,13 @@ class TestChurn(unittest.TestCase):
         Raises:
             err: Raises an AssertionError if there is no files in image folders.
         '''
-        df = self.churn.import_data("bank_data.csv")
-        df = self.churn.perform_eda(df=df)
-        df = self.churn.encoder_helper(df=df, category_list=list(
-            df.select_dtypes(include=['object']).columns), response='churn')
-        columns_for_training = ['Customer_Age', 'Dependent_count', 'Months_on_book',
-                                'Total_Relationship_Count', 'Months_Inactive_12_mon',
-                                'Contacts_Count_12_mon', 'Credit_Limit', 'Total_Revolving_Bal',
-                                'Avg_Open_To_Buy', 'Total_Amt_Chng_Q4_Q1', 'Total_Trans_Amt',
-                                'Total_Trans_Ct', 'Total_Ct_Chng_Q4_Q1', 'Avg_Utilization_Ratio',
-                                'Gender_churn', 'Education_Level_churn', 'Marital_Status_churn',
-                                'Income_Category_churn', 'Card_Category_churn']
+        customers_data = self.churn.import_data("bank_data.csv")
+        customers_data = self.churn.perform_eda(df=customers_data)
+        customers_data = self.churn.encoder_helper(df=customers_data, category_list=list(
+            customers_data.select_dtypes(include=['object']).columns), response='churn')
+
         x_train, x_test, y_train, y_test = self.churn.perform_feature_engineering(
-            df=df, response=columns_for_training)
+            df=customers_data, response=COLUMNS_FOR_TRAINING)
 
         self.churn.train_models(
             x_train=x_train, x_test=x_test, y_train=y_train, y_test=y_test)
@@ -216,22 +197,22 @@ class TestChurn(unittest.TestCase):
             self.assertEqual(model_of_rfc, 1)
             log.info(
                 ("SUCCESS on train_models: There is one model of"
-                " Random Forest on docs/models folder."))
+                 " Random Forest on docs/models folder."))
         except AssertionError as err:
             log.error(
                 ("ERROR on train_models: There isn`t one model of"
-                " Random Forest on docs/models folder."))
+                 " Random Forest on docs/models folder."))
             raise err
 
         try:
             self.assertEqual(model_of_logistic, 1)
             log.info(
                 ('SUCCESS on train_models: There is one model of'
-                ' Logistic Regression on docs/models folder.'))
+                 ' Logistic Regression on docs/models folder.'))
         except AssertionError as err:
             log.error(
                 ('ERROR on train_models: There isn`t one model of'
-                ' Logistic Regression on docs/models folder.'))
+                 ' Logistic Regression on docs/models folder.'))
             raise err
 
         list_of_files = os.listdir(IMAGES_RESULTS)
@@ -245,22 +226,22 @@ class TestChurn(unittest.TestCase):
             self.assertEqual(image_of_roc_curve, 1)
             log.info(
                 ('SUCCESS on train_models: There is one image for ROC'
-                ' curve on images/results folder.'))
+                 ' curve on images/results folder.'))
         except AssertionError as err:
             log.error(
                 ('ERROR on train_models: There isn`t one image for'
-                ' ROC curve on images/results folder.'))
+                 ' ROC curve on images/results folder.'))
             raise err
 
         try:
             self.assertEqual(image_of_shap_values, 1)
             log.info(
                 ('SUCCESS on train_models: There is one image for SHAP values on'
-                ' the Randon Forest on images/results folder.'))
+                 ' the Randon Forest on images/results folder.'))
         except AssertionError as err:
             log.error(
                 ('ERROR on train_models: There isn`t one image for SHAP values on'
-                ' the Randon Forest on images/results folder.'))
+                 ' the Randon Forest on images/results folder.'))
             raise err
 
     def test_classification_report(self):
@@ -271,19 +252,13 @@ class TestChurn(unittest.TestCase):
         Raises:
             err: Raises an AssertionError if there is no files in images/eda folder.
         """
-        df = self.churn.import_data("bank_data.csv")
-        df = self.churn.perform_eda(df=df)
-        df = self.churn.encoder_helper(df=df, category_list=list(
-            df.select_dtypes(include=['object']).columns), response='churn')
-        columns_for_training = ['Customer_Age', 'Dependent_count', 'Months_on_book',
-                                'Total_Relationship_Count', 'Months_Inactive_12_mon',
-                                'Contacts_Count_12_mon', 'Credit_Limit', 'Total_Revolving_Bal',
-                                'Avg_Open_To_Buy', 'Total_Amt_Chng_Q4_Q1', 'Total_Trans_Amt',
-                                'Total_Trans_Ct', 'Total_Ct_Chng_Q4_Q1', 'Avg_Utilization_Ratio',
-                                'Gender_churn', 'Education_Level_churn', 'Marital_Status_churn',
-                                'Income_Category_churn', 'Card_Category_churn']
+        customers_data = self.churn.import_data("bank_data.csv")
+        customers_data = self.churn.perform_eda(df=customers_data)
+        customers_data = self.churn.encoder_helper(df=customers_data, category_list=list(
+            customers_data.select_dtypes(include=['object']).columns), response='churn')
+
         x_train, x_test, y_train, y_test = self.churn.perform_feature_engineering(
-            df=df, response=columns_for_training)
+            df=customers_data, response=COLUMNS_FOR_TRAINING)
 
         rfc_model = joblib.load(os.path.join(DOCS_MODELS, 'rfc_model.pkl'))
         lr_model = joblib.load(os.path.join(DOCS_MODELS, 'logistic_model.pkl'))
@@ -311,22 +286,22 @@ class TestChurn(unittest.TestCase):
             self.assertEqual(images_random_forest_length, 2)
             log.info(
                 ('SUCCESS on classification_report: There is two images of'
-                ' Random Forest (Train and Test) on images/eda folder.'))
+                 ' Random Forest (Train and Test) on images/eda folder.'))
         except AssertionError as err:
             log.error(
                 ('ERROR on classification_report: There isn`t two images of'
-                ' Random Forest (Train and Test) on images/eda folder.'))
+                 ' Random Forest (Train and Test) on images/eda folder.'))
             raise err
 
         try:
             self.assertEqual(images_logistic_regression_length, 2)
             log.info(
                 ('SUCCESS on classification_report: There is two images of'
-                ' Logistic Regression (Train and Test) on images/eda folder.'))
+                 ' Logistic Regression (Train and Test) on images/eda folder.'))
         except AssertionError as err:
             log.error(
                 ('ERROR on classification_report: There isn`t two images of'
-                ' Logistic Regression (Train and Test) on images/eda folder.'))
+                 ' Logistic Regression (Train and Test) on images/eda folder.'))
             raise err
 
     def test_feature_importance_plot(self):
@@ -337,19 +312,13 @@ class TestChurn(unittest.TestCase):
         Raises:
             err: Raises an AssertionError if there is no files in images/result folder.
         """
-        df = self.churn.import_data("bank_data.csv")
-        df = self.churn.perform_eda(df=df)
-        df = self.churn.encoder_helper(df=df, category_list=list(
-            df.select_dtypes(include=['object']).columns), response='churn')
-        columns_for_training = ['Customer_Age', 'Dependent_count', 'Months_on_book',
-                                'Total_Relationship_Count', 'Months_Inactive_12_mon',
-                                'Contacts_Count_12_mon', 'Credit_Limit', 'Total_Revolving_Bal',
-                                'Avg_Open_To_Buy', 'Total_Amt_Chng_Q4_Q1', 'Total_Trans_Amt',
-                                'Total_Trans_Ct', 'Total_Ct_Chng_Q4_Q1', 'Avg_Utilization_Ratio',
-                                'Gender_churn', 'Education_Level_churn', 'Marital_Status_churn',
-                                'Income_Category_churn', 'Card_Category_churn']
+        customers_data = self.churn.import_data("bank_data.csv")
+        customers_data = self.churn.perform_eda(df=customers_data)
+        customers_data = self.churn.encoder_helper(df=customers_data, category_list=list(
+            customers_data.select_dtypes(include=['object']).columns), response='churn')
+
         x_train, x_test, _, _ = self.churn.perform_feature_engineering(
-            df=df, response=columns_for_training)
+            df=customers_data, response=COLUMNS_FOR_TRAINING)
 
         rfc_model = joblib.load(os.path.join(DOCS_MODELS, 'rfc_model.pkl'))
 
@@ -363,9 +332,9 @@ class TestChurn(unittest.TestCase):
             self.assertEqual(images_random_forest_importance_length, 1)
             log.info(
                 ('SUCCESS on feature_importance_plot: There is a image of'
-                ' Random Forest features importance on images/results folder.'))
+                 ' Random Forest features importance on images/results folder.'))
         except AssertionError as err:
             log.error(
                 ('ERROR on feature_importance_plot: There isn`t a image of'
-                ' Random Forest features importance on images/results folder.'))
+                 ' Random Forest features importance on images/results folder.'))
             raise err
