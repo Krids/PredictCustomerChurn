@@ -16,6 +16,7 @@ autopep8 = "^1.6.0"
 pylint = "^2.12.2"
 shap = "^0.40.0"
 seaborn = "^0.11.2"
+pytest = "^7.0.0"
 
 [tool.poetry.dev-dependencies]
 
